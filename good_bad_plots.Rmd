@@ -1,0 +1,133 @@
+---
+title: "Data viz!"
+author: "Allie Cole"
+date: "8/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(here)
+library(janitor)
+library(lubridate)
+library(tidyverse)
+library(ggplot2)
+library(ggdendro)
+
+devtools::install_github("hrbrmstr/ggalt")
+library(ggplot2)
+library(ggalt)
+library(ggfortify)
+
+# Specifically for plots:
+library(patchwork)
+library(ggrepel)  #replusive labels
+library(gghighlight) 
+library(paletteer) #for colors 
+library(ggExtra) #for marginal plots
+library(ggbeeswarm) #for beeswarm plots
+
+# Some more data to look at
+library(gapminder)
+
+# Spatial
+library(sf)
+```
+
+
+```{r}
+data <- read_csv(here("data", "space_launches.csv"))
+```
+
+### Making a really bad plot 
+
+```{r}
+
+ggplot(data = data, aes(x = launch_year, y = type)) +
+  geom_point(aes(color = "mission")) +
+  theme(
+    panel.background = element_rect(fill = "light yellow", 
+                                    color = "purple", 
+                                    size = 5), 
+    plot.background = element_rect(fill = "pink"), 
+    axis.text.x = element_text(color = "blue"), 
+    axis.text.y = element_text(color = "green"), 
+    axis.title = element_text(color = "red"), 
+    text = element_text(size = 24, family = "sans")
+  ) +
+  labs(x = " ", 
+       y = "name of the thing", 
+       title = "we went to space!") +
+  geom_encircle()
+
+ggsave(here("worst_plot.png"))
+
+
+
+
+
+
+
+```
+
+
+### And now task 2 
+
+```{r}
+sf_data <- read_csv(here("data", "San_Francisco_Communitywide_Greenhouse_Gas_Inventory.csv"))
+```
+
+```{r}
+ghi_sum <- sf_data %>% 
+  group_by(Sector_General) %>% 
+  summarize(Emissions_mtCO2e = n())
+
+ghi_sum2 <- sf_data %>% 
+  group_by(Calendar_Year, Commodity_Type) %>% 
+  summarize(Emissions_mtCO2e = n())
+
+sf_subset <- sf_data %>% 
+  filter(Calendar_Year >= 2005) %>% 
+  filter(str_detect(Sector_Detail2, pattern = "PG&E")) %>% 
+  select(Calendar_Year, Sector_Detail2, Emissions_mtCO2e)
+
+```
+
+
+### And now a good plot?
+
+```{r}
+total_emis <- sf_data %>% 
+  group_by(Sector_GPC, Calendar_Year) %>% 
+  summarize(Emissions_mtCO2e = n()) 
+
+
+ggplot(data = total_emis, aes(x = Calendar_Year, y = Emissions_mtCO2e)) +
+  geom_line(aes(color = Sector_GPC)) + 
+  labs(x = "Year", 
+       y = "Total Emissions (mtCO2)", 
+       title = "Total CO2 Emissions by Sector for San Francisco") +
+  theme_light() +
+  annotate("text", x = 2005, y = 40, label = "Agriculture") +
+  geom_text(data = subset(total_emis, Calendar_Year == "2019"), aes(label = Sector_GPC))
+
+
+
+
+
+
+   geom_text(aes(x = max(Calendar_Year), y = max(Sector_GPC), label = Sector_GPC))
+ 
+
+  
+```
+
+
+
+
+
+
+
+
+
